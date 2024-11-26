@@ -34,3 +34,14 @@ def signup():
     # Add user to the group
     user_id = db.execute("INSERT INTO users (attributes, group_id) VALUES (?, ?)", attributes_str, group["id"])
     return jsonify({"user_id": user_id, "group_id": group["id"]}), 201
+
+
+# Sign in an existing user
+@app.route('/signin', methods=['POST'])
+def signin():
+    data = request.json
+    user_id = data.get('user_id')
+    user = db.execute("SELECT * FROM users WHERE id = ?", user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    return jsonify({"message": "Sign-in successful", "user_id": user_id}), 200
