@@ -34,4 +34,13 @@ You can use a tool like Postman or curl to interact with the endpoints
 -d '{"user_id": 1}'`  
 >group/<user_id>:  
 `curl http://127.0.0.1:5000/group/1`  
->
+
+**Limitations of this implementation**
+1. Efficiency:
+   - The matching algorithm iterates over all groups, which is inefficient for large datasets.  
+   - No caching leads to repeated database queries for frequent requests.  
+3. Scalability:
+   - The system might struggle to handle concurrent requests as it directly queries the database.
+  
+**Later imporvments:**  
+- Use queueing, and caching mechanisms to improve app performance.  
