@@ -35,7 +35,6 @@ def signup():
     user_id = db.execute("INSERT INTO users (attributes, group_id) VALUES (?, ?)", attributes_str, group["id"])
     return jsonify({"user_id": user_id, "group_id": group["id"]}), 201
 
-
 # Sign in an existing user
 @app.route('/signin', methods=['POST'])
 def signin():
@@ -45,3 +44,20 @@ def signin():
     if not user:
         return jsonify({"error": "User not found"}), 404
     return jsonify({"message": "Sign-in successful", "user_id": user_id}), 200
+
+# Retrieve the group of a specific user
+@app.route('/group/<int:user_id>', methods=['GET'])
+def get_group(user_id):
+    user = db.execute("SELECT * FROM users WHERE id = ?", user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    group_id = user[0]["group_id"]
+    group = db.execute("SELECT * FROM groups WHERE id = ?", group_id)
+    if not group:
+        return jsonify({"error": "Group not found"}), 404
+
+    # Retrieve all users in the group
+    group_members = db.execute("SELECT * FROM users WHERE group_id = ?", group_id)
+    members = [{"id": member["id"], "attributes": member["attributes"]} for member in group_members]
+    return jsonify({"group_id": group_id, "members": members}), 200
