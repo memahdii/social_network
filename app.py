@@ -1,7 +1,16 @@
 from flask import Flask, request, jsonify
 from cs50 import SQL
+from flask_caching import Cache
+from redis.exceptions import RedisError
 
 app = Flask(__name__)
+
+# Configure Cache
+app.config['CACHE_TYPE'] = 'redis'
+app.config['CACHE_REDIS_HOST'] = 'localhost'
+app.config['CACHE_REDIS_PORT'] = 6379
+app.config['CACHE_DEFAULT_TIMEOUT'] = 300
+cache = Cache(app)
 
 # Initialize SQLite database
 db = SQL("sqlite:///database.db")
@@ -17,9 +26,17 @@ def signup():
     # Serialize attributes for comparison
     attributes_str = ','.join(sorted(attributes))
 
+    # Cache groups lookup
+    try:
+        groups = cache.get('groups')
+        if not groups:
+            groups = db.execute("SELECT * FROM groups")
+            cache.set('groups', groups)
+    except RedisError:
+        groups = db.execute("SELECT * FROM groups")  # Fallback if Redis fails
+
     # Check if a matching group already exists
     group = None
-    groups = db.execute("SELECT * FROM groups")
     for g in groups:
         group_attributes = [attr.strip() for attr in g["members"].split(',')]
         if any(attr in group_attributes for attr in attributes):  # Simple matching logic
@@ -30,6 +47,13 @@ def signup():
     if not group:
         new_group_id = db.execute("INSERT INTO groups (members) VALUES (?)", attributes_str)
         group = {"id": new_group_id, "members": attributes_str}
+
+        # Update cache with the new group
+        groups.append(group)
+        try:
+            cache.set('groups', groups)
+        except RedisError:
+            pass  # Ignore cache errors
 
     # Add user to the group
     user_id = db.execute("INSERT INTO users (attributes, group_id) VALUES (?, ?)", attributes_str, group["id"])
@@ -47,6 +71,7 @@ def signin():
 
 # Retrieve the group of a specific user
 @app.route('/group/<int:user_id>', methods=['GET'])
+@cache.cached(timeout=60, query_string=True)  # Cache the response for 60 seconds
 def get_group(user_id):
     user = db.execute("SELECT * FROM users WHERE id = ?", user_id)
     if not user:
