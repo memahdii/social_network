@@ -49,8 +49,8 @@ You can use a tool like Postman or curl to interact with the endpoints
 - caching mechanism added.
 - automated testing add  
 
-**to test the api:**  
-1. Install the packages using this command `pip install -r requirements.txt`  
-2. run Redis using this command in terminal `redis-server`
-3. open a new terminal and run flask using this command: `flask run`
-4. Run the Testing Script: `python test_flask_app.py`  
+- to test the api:   
+  1. Install the packages using this command `pip install -r requirements.txt`  
+  2. run Redis using this command in terminal `redis-server`
+  3. open a new terminal and run flask using this command: `flask run`
+  4. Run the Testing Script: `python test_flask_app.py`  
