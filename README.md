@@ -14,16 +14,14 @@
   - Verifies user existence based on their ID.  
 - /group/<user_id>:  
   - Retrieves all users in the group the user belongs to by querying the users table.  
-  
-**Matching Algorithm**  
-A simple loop through existing groups checks if there’s a partial match between attributes.  
-New groups are created if no suitable group is found.  
+
 
 **Testing Steps**
-1. Install dependencies
-2. Run Flask Application by typing ' **flask run** ' in terminal
-3. Test API Endpoints:
-You can use a tool like Postman or curl to interact with the endpoints
+1. Install the packages using this command `pip install -r requirements.txt` 
+2. run Redis using this command in terminal `redis-server`
+3. open a new terminal and run flask using this command: `flask run`
+4. Run the Testing Script: `python test_flask_app.py`  
+Other options: You can use a tool like Postman or curl to interact with the endpoints
 >Sign Up:  
 `curl -X POST http://127.0.0.1:5000/signup \
 -H "Content-Type: application/json" \
@@ -34,23 +32,6 @@ You can use a tool like Postman or curl to interact with the endpoints
 -d '{"user_id": 1}'`  
 >group/<user_id>:  
 `curl http://127.0.0.1:5000/group/1`  
-
-**Limitations of this implementation**
-1. Efficiency:
-   - The matching algorithm iterates over all groups, which is inefficient for large datasets.  
-   - No caching leads to repeated database queries for frequent requests.  
-3. Scalability:
-   - The system might struggle to handle concurrent requests as it directly queries the database.
   
 **Later imporvments:**  
-- Use queueing, and caching mechanisms to improve app performance.
-
-**Update:**  
-- caching mechanism added.
-- automated testing add  
-
-- to test the api:   
-  1. Install the packages using this command `pip install -r requirements.txt`  
-  2. run Redis using this command in terminal `redis-server`
-  3. open a new terminal and run flask using this command: `flask run`
-  4. Run the Testing Script: `python test_flask_app.py`  
+- Use queueing, and add hashing algorithm to improve app performance.
