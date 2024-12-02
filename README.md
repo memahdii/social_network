@@ -21,17 +21,18 @@
 2. run Redis using this command in terminal `redis-server`
 3. open a new terminal and run flask using this command: `flask run`
 4. Run the Testing Script: `python test_flask_app.py`  
+
 Other options: You can use a tool like Postman or curl to interact with the endpoints
->Sign Up:  
-`curl -X POST http://127.0.0.1:5000/signup \
--H "Content-Type: application/json" \
--d '{"attributes": ["Software", "Engineer", "Brussels"]}'`  
->Sign In:  
-`curl -X POST http://127.0.0.1:5000/signin \
--H "Content-Type: application/json" \
--d '{"user_id": 1}'`  
->group/<user_id>:  
-`curl http://127.0.0.1:5000/group/1`  
+  >Sign Up:  
+  `curl -X POST http://127.0.0.1:5000/signup \
+  -H "Content-Type: application/json" \
+  -d '{"attributes": ["Software", "Engineer", "Brussels"]}'`  
+  >Sign In:  
+  `curl -X POST http://127.0.0.1:5000/signin \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": 1}'`  
+  >group/<user_id>:  
+  `curl http://127.0.0.1:5000/group/1`  
   
 **Later imporvments:**  
 - Use queueing, and add hashing algorithm to improve app performance.
