@@ -42,3 +42,6 @@ Other options: You can use a tool like Postman or curl to interact with the endp
 - Offloads heavy operations (e.g., database writes) to a background worker using Redis queues.  
 3. Responsiveness:  
 - Ensures the main application thread doesn’t become unresponsive while creating a group.
+
+**Potential Improvement:**  
+- The loop could include a timeout or error-checking mechanism to handle cases where the task fails.
