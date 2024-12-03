@@ -22,8 +22,7 @@
 3. open a new terminal and run flask using this command: `flask run`
 4. Start a worker process for the queue: `rq worker`  
 5. Run the Testing Script: `python test_flask_app.py`  
-
-Other options: You can use a tool like Postman or curl to interact with the endpoints
+- Other options: You can use a tool like Postman or curl to interact with the endpoints
   >Sign Up:  
   `curl -X POST http://127.0.0.1:5000/signup \
   -H "Content-Type: application/json" \
