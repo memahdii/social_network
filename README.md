@@ -1,4 +1,42 @@
+**Problem Statement**  
+- Build a social network app where users join by specifying attributes and group them with others based on attribute similarity.  
+Every user should have a unique ID assigned to them once they join.  
+After joining users are able to see all the users they have been grouped with  
+
+**API Requirements**  
+- Sign-Up API: Accepts user attributes, assigns a unique ID, and groups the user.  
+- Sign-In API: Authenticates users via user_id and generates tokens for future requests.  
+- Get Group API: Allows users to see group members by providing their ID.  
+
+
 # Explanation of Code  
+
+Algorithm used for group matching is **Hashing**  
+set intersection:  
+- First I convert the data to set to hash each attribute  
+- Then performing an intersection (set1 & set2)  
+- Python computes the hash of each element in one set and checks for its existence in the hash table of the other set.  
+- This makes the comparison highly efficient, as each membership check is O(1).  
+
+set1 = {"attr1", "attr2"}  
+set2 = {"attr1", "attr5"}  
+
+Hash of "attr1" exists in both sets, so it’s included in the intersection.
+intersection = set1 & set2  
+print(intersection)  # Output: {"attr1"}  
+
+**Caching Mechanism**  
+- Caching is implemented using the flask_caching library and backed by Redis.  
+Purpose:  
+- Caching helps store frequently accessed data temporarily, reducing database queries and speeding up responses for repeated requests.
+  
+For instance:  
+1. Caching Database Queries: The find_matching_group function uses caching to store the list of groups fetched from the database  
+2. Caching HTTP Responses: The /group/<int:user_id> route caches the response for 60 seconds using the @cache.cached decorator:
+If the same request is made again within this time, the cached response is returned instead of querying the database.  
+
+**Task Queueing**  
+In order to allow the program to handle time-intensive operations asynchronously, and ensuring the app remains responsive while processing tasks in the background, I implemented Tsk Queueing using the rq library and backed by Redis.  
 
 **Database Operations**  
 - Users Table:  Stores each user's attributes and their assigned group ID.
@@ -13,7 +51,11 @@
 - /signin:  
   - Verifies user existence based on their ID.  
 - /group/<user_id>:  
-  - Retrieves all users in the group the user belongs to by querying the users table.  
+  - Retrieves all users in the group the user belongs to by querying the users table.
+- /user/<user_id>:
+  - PUT method: Update the user's attributes in the database
+  - DELETE method: Remove user from database
+  
 
 
 **Testing Steps**
