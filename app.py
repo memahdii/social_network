@@ -148,7 +148,14 @@ def update_user(user_id):
     db.execute("UPDATE users SET attributes = ? WHERE id = ?", new_attributes_str, user_id)
     return jsonify({"message": "User attributes updated successfully"}), 200
 
- 
+@app.route('/user/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    user = db.execute("SELECT * FROM users WHERE id = ?", user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    db.execute("DELETE FROM users WHERE id = ?", user_id)
+    return jsonify({"message": "User deleted successfully"}), 200
 
 if __name__ == "__main__":
     app.run(debug=True)

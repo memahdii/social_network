@@ -40,8 +40,8 @@ def test_flow():
     print("\n=== Running Update User Attribute Test ===")
     test_update_user(35)
 
-    # print("\n=== Running Delete User Test ===")
-    # test_delete_user(35)
+    print("\n=== Running Delete User Test ===")
+    test_delete_user(35)
 
 if __name__ == "__main__":
     test_flow()
