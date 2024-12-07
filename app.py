@@ -129,7 +129,26 @@ def get_group(user_id):
     members = [{"id": member["id"], "attributes": member["attributes"]} for member in group_members]
     return jsonify({"group_id": group_id, "members": members}), 200
 
+@app.route('/user/<int:user_id>', methods=['PUT'])
+def update_user(user_id):
+    data = request.json
+    new_attributes = data.get('attributes')
 
+    if not new_attributes:
+        return jsonify({"error": "New attributes are required"}), 400
+
+    # Serialize attributes for storage
+    new_attributes_str = ','.join(sorted(new_attributes))
+
+    # Update the user's attributes in the database
+    user = db.execute("SELECT * FROM users WHERE id = ?", user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    db.execute("UPDATE users SET attributes = ? WHERE id = ?", new_attributes_str, user_id)
+    return jsonify({"message": "User attributes updated successfully"}), 200
+
+ 
 
 if __name__ == "__main__":
     app.run(debug=True)
