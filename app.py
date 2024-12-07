@@ -4,6 +4,7 @@ from flask_caching import Cache
 from rq import Queue
 from redis import Redis
 import time
+import secrets
 
 app = Flask(__name__)
 
@@ -12,25 +13,26 @@ app.config['CACHE_TYPE'] = 'redis'
 app.config['CACHE_REDIS_HOST'] = 'localhost'
 app.config['CACHE_REDIS_PORT'] = 6379
 app.config['CACHE_DEFAULT_TIMEOUT'] = 300
-cache = Cache(app)
+cache = Cache(app) # Connect Flask with Redis.
 
 # Initialize SQLite database
 db = SQL("sqlite:///database.db")
 
 # Configure Redis for queueing
-redis_conn = Redis(host='localhost', port=6379)
-task_queue = Queue(connection=redis_conn)
+redis_conn = Redis(host='localhost', port=6379) # Establishes a connection to a Redis server.
+task_queue = Queue(connection=redis_conn) # create a queue object connected to the Redis instance.
 
 
-# Helper Function: Search for a matching group
+# Helper function: search for a matching group where at least one attribute matches.
 def find_matching_group(attributes):
-    """
-    Efficiently find a group where at least one attribute matches.
-    """
+    # convert attrbutes to set
     attributes_set = set(attributes)
+    # check if the groups are already cached
     groups = cache.get('groups')
     if not groups:
+        # query the database
         groups = db.execute("SELECT * FROM groups")
+        # store the result in the cache
         cache.set('groups', groups)
 
     for group in groups:
@@ -41,11 +43,8 @@ def find_matching_group(attributes):
     return None
 
 
-# Queue Task: Create a new group
+# Queue Task: Create a new group asynchronously
 def create_group_and_assign_user(attributes_str):
-    """
-    Create a new group and assign the user to it. Run asynchronously.
-    """
     new_group_id = db.execute("INSERT INTO groups (members) VALUES (?)", attributes_str)
     return {"id": new_group_id, "members": attributes_str}
 
@@ -61,11 +60,12 @@ def signup():
     # Serialize attributes for comparison
     attributes_str = ','.join(sorted(attributes))
 
-    # Efficiently search for a matching group
+    # search for a matching group
     group = find_matching_group(attributes)
 
-    # If no matching group found, enqueue the task to create a new one
+    # If no matching group found, a new group is created asynchronously
     if not group:
+        # Redis stores the task details, and a worker (running separately) picks up the task for execution.
         job = task_queue.enqueue(create_group_and_assign_user, attributes_str)
         while not job.result:  # Wait for the task to complete
             time.sleep(0.1)
@@ -76,15 +76,39 @@ def signup():
     return jsonify({"user_id": user_id, "group_id": group["id"]}), 201
 
 
-# Sign in an existing user
 @app.route('/signin', methods=['POST'])
 def signin():
     data = request.json
     user_id = data.get('user_id')
+
+    # Check if the token is already cached for the user
+    cached_token = cache.get(f"user_token_{user_id}")
+    if cached_token:
+        # If token is found in cache, return it directly
+        return jsonify({"message": "Sign-in successful", "user_id": user_id, "token": cached_token}), 200
+
+    # Fetch user data from the database
     user = db.execute("SELECT * FROM users WHERE id = ?", user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
-    return jsonify({"message": "Sign-in successful", "user_id": user_id}), 200
+
+    # Check if the token is already set in the database
+    token = user[0]["token"]
+    if token:
+        # If token is already in the database but not cached, store it in cache for future use
+        cache.set(f"user_token_{user_id}", token)
+        return jsonify({"message": "Sign-in successful", "user_id": user_id, "token": token}), 200
+
+    # Generate a secure random token if it doesn't exist
+    token = secrets.token_hex(16)
+
+    # Update the token in the user's record in the database
+    db.execute("UPDATE users SET token = ? WHERE id = ?", token, user_id)
+
+    # Cache the token for future requests
+    cache.set(f"user_token_{user_id}", token)
+
+    return jsonify({"message": "Sign-in successful", "user_id": user_id, "token": token}), 200
 
 
 # Retrieve the group of a specific user
@@ -104,6 +128,7 @@ def get_group(user_id):
     group_members = db.execute("SELECT * FROM users WHERE group_id = ?", group_id)
     members = [{"id": member["id"], "attributes": member["attributes"]} for member in group_members]
     return jsonify({"group_id": group_id, "members": members}), 200
+
 
 
 if __name__ == "__main__":
